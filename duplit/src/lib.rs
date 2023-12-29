@@ -29,7 +29,7 @@ impl Duplit {
             }
         } else {
             if config_path.exists() {
-                std::fs::remove_dir(&config_path)?;
+                std::fs::remove_dir_all(&config_path)?;
                 Ok(std::fs::create_dir(&config_path)?)
             } else {
                 Ok(std::fs::create_dir(&config_path)?)
