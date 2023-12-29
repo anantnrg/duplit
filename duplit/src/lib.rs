@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::io::{BufRead, BufReader, Write};
 
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
@@ -80,6 +80,34 @@ impl Duplit {
 
                 let mut file = std::fs::File::create(config_path.join("config.toml"))?;
                 Ok(file.write_all(default_string.as_bytes())?)
+            }
+        }
+    }
+
+    pub fn get_pacman_pkgs() {
+        let raw_output = std::process::Command::new("pacman")
+            .arg("-Qqen")
+            .output()
+            .unwrap();
+        if raw_output.status.success() {
+            let stdout = raw_output.stdout;
+            let reader = BufReader::new(stdout.as_slice());
+            for line in reader.lines() {
+                println!("{}", line.unwrap());
+            }
+        }
+    }
+
+    pub fn get_aur_pkgs() {
+        let raw_output = std::process::Command::new("pacman")
+            .arg("-Qqem")
+            .output()
+            .unwrap();
+        if raw_output.status.success() {
+            let stdout = raw_output.stdout;
+            let reader = BufReader::new(stdout.as_slice());
+            for line in reader.lines() {
+                println!("{}", line.unwrap());
             }
         }
     }

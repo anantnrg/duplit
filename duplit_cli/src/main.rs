@@ -14,6 +14,7 @@ struct Cli {
 pub enum Commands {
     Init,
     InitForce,
+    Create,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -42,5 +43,6 @@ fn main() -> anyhow::Result<()> {
             }
             Err(e) => Err(e),
         },
+        Commands::Create => Ok(Duplit::get_pacman_pkgs()),
     }
 }
