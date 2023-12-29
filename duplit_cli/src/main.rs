@@ -13,6 +13,34 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 pub enum Commands {
     Init,
+    InitForce,
 }
 
-fn main() {}
+fn main() -> anyhow::Result<()> {
+    let args = Cli::parse();
+
+    match args.command {
+        Commands::Init => match Duplit::init_config(false) {
+            Ok(_) => {
+                println!(
+                    "{} {}",
+                    "INFO:".green().bold(),
+                    "Duplit config initialized successfully!"
+                );
+                Ok(())
+            }
+            Err(e) => Err(e),
+        },
+        Commands::InitForce => match Duplit::init_config(true) {
+            Ok(_) => {
+                println!(
+                    "{} {}",
+                    "INFO:".green().bold(),
+                    "Duplit config initialized successfully!"
+                );
+                Ok(())
+            }
+            Err(e) => Err(e),
+        },
+    }
+}
