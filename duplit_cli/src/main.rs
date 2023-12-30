@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use colored::*;
 use duplit::Duplit;
@@ -18,6 +20,15 @@ pub enum Commands {
 }
 
 fn main() -> anyhow::Result<()> {
+    let config = Duplit::fetch_config()?;
+    let mut duplit = Duplit::new(config);
+    let mut genconfig = duplit::GenConfig::new();
+
+    let progress = |status: String| {
+        print!("\r{}", status);
+        std::io::stdout().flush().unwrap();
+    };
+    duplit.copy_configs(&mut genconfig, progress)?;
     let args = Cli::parse();
 
     match args.command {
@@ -43,6 +54,9 @@ fn main() -> anyhow::Result<()> {
             }
             Err(e) => Err(e),
         },
-        Commands::Create => Ok(Duplit::get_pacman_pkgs()),
+        Commands::Create => match Duplit::get_pkgs() {
+            Ok(pkgs) => Ok(()),
+            Err(e) => Err(e),
+        },
     }
 }
