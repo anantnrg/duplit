@@ -8,7 +8,9 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.77"
 fs_extra = "1.3.0"
+fscx-rs = "0.1.1"
 serde = { version = "1.0.193", features = ["serde_derive"] }
 shellexpand = "3.1.0"
 toml = "0.8.8"
+walkdir = "2.4.0"
 xdg = "2.5.2"

@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use fscx_rs::dir::copy;
 use serde::{Deserialize, Serialize};
 use std::{
     io::{BufRead, BufReader, Read, Write},
@@ -172,15 +173,8 @@ impl Duplit {
             aur: aur_pkgs,
         })
     }
-
-    pub fn expand_path(path: &String) -> PathBuf {
-        if path.contains("~") {
-            return PathBuf::from(shellexpand::tilde(&path).to_string());
-        } else if path.contains("$") {
-            return PathBuf::from(shellexpand::env(&path).unwrap().to_string());
-        } else {
-            return PathBuf::from(path);
-        }
+    pub fn expand_path(path: String) -> String {
+        return path.replace("$HOME", std::env::var("HOME").unwrap_or_default().as_str());
     }
 
     pub fn copy_configs<F>(&mut self, gen_config: &mut GenConfig, status: F) -> anyhow::Result<()>
@@ -195,36 +189,28 @@ impl Duplit {
         }
 
         for path in &self.config.configs.include {
-            let full_path = Duplit::expand_path(path);
+            let full_path = PathBuf::from(Duplit::expand_path(path.clone()));
 
+            println!("{full_path:?}");
             if let Ok(metadata) = std::fs::metadata(&full_path) {
                 if metadata.is_file() {
                     if let Some(file_name) = &full_path.file_name() {
-                        let options = fs_extra::file::CopyOptions::new();
-                        let progress_handle = |process_info: fs_extra::file::TransitProcess| {
-                            let percent =
-                                (process_info.copied_bytes * 100) / process_info.total_bytes;
-                            status(format!(
-                                "Copying file \"{}\" to \"{}\": {}/{} ({}%) ",
-                                full_path.to_str().unwrap(),
-                                config_path
-                                    .join(file_name.to_str().unwrap())
-                                    .to_str()
-                                    .unwrap(),
-                                process_info.copied_bytes,
-                                process_info.total_bytes,
-                                percent
-                            ))
+                        let progress_handle = |progress: fscx_rs::Progress| {
+                            println!(
+                                "\rCopying: {}% ({}/{})",
+                                progress.percentage, progress.processed_bytes, progress.total_bytes
+                            );
                         };
                         gen_config.configs.push(ConfigLocations {
                             name: String::from(file_name.to_str().unwrap()),
                             out: String::from(full_path.to_str().unwrap()),
                         });
-                        fs_extra::file::copy_with_progress(
+                        fscx_rs::file::copy(
                             &full_path,
                             dest_path.clone().join(file_name.to_str().unwrap()),
-                            &options,
-                            progress_handle,
+                            true,
+                            Some(progress_handle),
+                            None,
                         )?;
                     }
                 } else if metadata.is_dir() {
@@ -234,19 +220,11 @@ impl Duplit {
                         .to_str()
                     {
                         let dest_dir = dest_path.clone().join(dir_name);
-                        let options = fs_extra::dir::CopyOptions::new();
-                        let progress_handle = |process_info: fs_extra::dir::TransitProcess| {
-                            let percent =
-                                (process_info.copied_bytes * 100) / process_info.total_bytes;
-                            status(format!(
-                                "Copying folder \"{}\" to \"{}\": {}/{} ({}%) ",
-                                full_path.to_str().unwrap(),
-                                config_path.join(dir_name).to_str().unwrap(),
-                                process_info.copied_bytes,
-                                process_info.total_bytes,
-                                percent
-                            ));
-                            fs_extra::dir::TransitProcessResult::ContinueOrAbort
+                        let progress_handle = |progress: fscx_rs::Progress| {
+                            println!(
+                                "\rCopying: {}% ({}/{})",
+                                progress.percentage, progress.processed_bytes, progress.total_bytes
+                            );
                         };
                         gen_config.configs.push(ConfigLocations {
                             name: String::from(dir_name),
@@ -259,19 +237,18 @@ impl Duplit {
                         let mut exclude_paths = Vec::new();
 
                         for exclude_path in &self.config.configs.exclude {
-                            if exclude_path.contains(full_path.to_str().unwrap()) {
-                                let path = exclude_path.replace(full_path.to_str().unwrap(), "");
-                                exclude_paths.push(path);
-                            }
+                            exclude_paths.push(exclude_path.as_str());
+
+                            println!("{exclude_path:?}")
                         }
 
-                        println!("{:?}", exclude_paths);
-
-                        fs_extra::dir::copy_with_progress(
+                        fscx_rs::dir::copy(
                             &full_path,
                             dest_dir.clone(),
-                            &options,
-                            progress_handle,
+                            vec!["smth"],
+                            true,
+                            Some(progress_handle),
+                            None,
                         )?;
                     }
                 }
