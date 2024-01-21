@@ -237,7 +237,8 @@ impl Duplit {
                         let mut exclude_paths = Vec::new();
 
                         for exclude_path in &self.config.configs.exclude {
-                            exclude_paths.push(exclude_path.as_str());
+                            let exclude_full_path = Duplit::expand_path(exclude_path.clone());
+                            exclude_paths.push(exclude_full_path);
 
                             println!("{exclude_path:?}")
                         }
@@ -245,7 +246,7 @@ impl Duplit {
                         fscx_rs::dir::copy(
                             &full_path,
                             dest_dir.clone(),
-                            vec!["smth"],
+                            exclude_paths,
                             true,
                             Some(progress_handle),
                             None,

@@ -189,9 +189,9 @@ checksum = "42703706b716c37f96a77aea830392ad231f44c9e9a67872fa5548707e11b11c"
 
 [[package]]
 name = "fscx-rs"
-version = "0.1.2"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ead7c3cf88740d9414c888b66cc50c701e42e6376b1c053c6af68669840b97a"
+checksum = "ecb247a8fd29cf973f2f38cbe28e54b4ad793e7b42adfd0ef27fc064e229ca90"
 dependencies = [
  "anyhow",
  "walkdir",
