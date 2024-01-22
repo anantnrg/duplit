@@ -1,4 +1,0 @@
-[workspace]
-resolver = "2"
-members = ["duplit", "duplit_cli"]
-default-members = ["duplit"]
